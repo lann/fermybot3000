@@ -1,0 +1,14 @@
+spin_version = "1"
+authors = ["Lann Martin <lann.martin@fermyon.com>"]
+description = ""
+name = "fermybot3000"
+trigger = { type = "http", base = "/" }
+version = "0.1.0"
+
+[[component]]
+id = "fermybot3000"
+source = "target/wasm32-wasi/release/fermybot3000.wasm"
+[component.trigger]
+route = "/..."
+[component.build]
+command = "cargo build --target wasm32-wasi --release"
