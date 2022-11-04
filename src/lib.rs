@@ -1,11 +1,13 @@
 use anyhow::{Context, Result};
 use bytes::Bytes;
 use http::StatusCode;
-use serde::{Deserialize, Serialize};
 use spin_sdk::{
     http::{Request, Response},
     http_component, redis,
 };
+
+mod slack;
+use slack::{slack_response, ResponseType, SlackSlashCommand, SlackSlashResponse};
 
 // e.g. redis://<username>:<password>@<hostname>:<port>
 const REDIS_URL: &str = include_str!("../redis_url");
@@ -58,47 +60,9 @@ fn debug(req: Request) -> Result<Response> {
     Ok(http::Response::new(None))
 }
 
-fn slack_response(resp: &SlackSlashResponse) -> Result<Response> {
-    let resp_bytes = serde_json::to_vec(resp)?;
-    simple_response(StatusCode::OK, resp_bytes)
-}
-
 fn simple_response(status: StatusCode, body: impl Into<Bytes>) -> Result<Response> {
     Ok(http::Response::builder()
         .status(status)
         .header("Content-Type", "application/json")
         .body(Some(body.into()))?)
-}
-
-// https://api.slack.com/interactivity/slash-commands#app_command_handling
-#[derive(Debug, Default, Deserialize)]
-#[serde(default)]
-#[allow(dead_code)]
-struct SlackSlashCommand {
-    token: String,
-    command: String,
-    text: String,
-    response_url: String,
-    trigger_id: String,
-    user_id: String,
-    user_name: String,
-    team_id: String,
-    team_domain: String,
-    channel_id: String,
-    channel_name: String,
-    api_app_id: String,
-}
-
-#[derive(Serialize)]
-struct SlackSlashResponse {
-    response_type: ResponseType,
-    text: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-#[allow(dead_code)]
-enum ResponseType {
-    Ephemeral,
-    InChannel,
 }
